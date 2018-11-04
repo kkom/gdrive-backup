@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source config
+USERNAME=kkom
+IMG_NAME=cloud-storage-backup
 
 docker build -t $USERNAME/$IMG_NAME .
 

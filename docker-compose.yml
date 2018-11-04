@@ -2,3 +2,5 @@ version: '3'
 services:
   cloud-storage-backup:
     image: kkom/cloud-storage-backup
+    volumes:
+       - ./config/:/root/.config/rclone/
