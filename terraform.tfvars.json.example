@@ -1,0 +1,7 @@
+{
+    "billing_account_id": "123456-12345A-A12345",
+    "backend_bucket": "my_terraform_backends_bucket",
+    "backend_prefix": "my_terraform_backend_prefix",
+    "cloud_storage_location": "saturn-west3",
+    "org_id": 1234567890
+}

@@ -18,6 +18,13 @@ resource "google_project" "gdrive_backup" {
   billing_account = var.billing_account_id
 }
 
+resource "google_project_services" "project" {
+  project = google_project.gdrive_backup.project_id
+  services = [
+    "oslogin.googleapis.com",
+  ]
+}
+
 resource "random_id" "storage_bucket_suffix" {
   byte_length = 8
 }
