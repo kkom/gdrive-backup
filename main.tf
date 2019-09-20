@@ -33,9 +33,4 @@ resource "google_storage_bucket" "gdrive_backup" {
   project  = google_project.gdrive_backup.project_id
   name     = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
   location = "${var.cloud_storage_location}"
-
-  website {
-    main_page_suffix = "index.html"
-    not_found_page   = "404.html"
-  }
 }
