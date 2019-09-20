@@ -8,9 +8,9 @@
 # Crash log files
 crash.log
 
-# Ignore local .tfvars files – every user of the repository should have their own
+# Ignore local .tfvars.json file – every user of the repository should have their own
 # settings
-terraform.tfvars
+terraform.tfvars.json
 
 # Ignore any .tfvars files that are generated automatically for each Terraform run. Most
 # .tfvars files are managed as part of configuration and so should be included in
