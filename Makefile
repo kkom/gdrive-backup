@@ -15,5 +15,6 @@ docker-test:
 	docker-compose -f docker_image/docker-compose.dev.yml run \
 		-e GSUITE_ACCOUNT_EMAIL=$(gsuite_account_email) \
 		-e RCLONE_CONF_GS_URL=$(shell terraform output rclone_conf_gs_url) \
+		-e SERVICE_ACCOUNT_KEY_GS_URL=$(shell terraform output service_account_key_gs_url) \
 		gdrive-backup \
 		bash
