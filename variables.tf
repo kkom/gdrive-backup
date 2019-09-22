@@ -6,7 +6,7 @@ variable "backend_prefix" {
   description = "Google Cloud Storage prefix of the backend. This is used for documentation only, the data is accessed from terraform.tfvars.json using jq in the Makefile."
 }
 
-variable "gsuite_account_name" {
+variable "gsuite_account_email" {
   description = "E-mail address of the G Suite account whose Google Drive folder is backed up."
 }
 
