@@ -25,22 +25,23 @@ output "project_id" {
 resource "google_project_services" "project" {
   project = google_project.gdrive_backup.project_id
   services = [
+    "drive.googleapis.com",
     "oslogin.googleapis.com",
   ]
 }
 
-resource "google_service_account" "gdrive_backup" {
+resource "google_service_account" "gdrive" {
   project      = google_project.gdrive_backup.project_id
-  account_id   = "gdrive-backup"
-  display_name = "Google Drive backup"
+  account_id   = "gdrive"
+  display_name = "Service account with domain-wide access to Google Drive"
 }
 
-resource "google_service_account_key" "gdrive_backup" {
-  service_account_id = google_service_account.gdrive_backup.name
+resource "google_service_account_key" "gdrive" {
+  service_account_id = google_service_account.gdrive.name
 }
 
-output "service_account_unique_id" {
-  value = google_service_account.gdrive_backup.unique_id
+output "gdrive_service_account_unique_id" {
+  value = google_service_account.gdrive.unique_id
 }
 
 resource "random_id" "storage_bucket_suffix" {
@@ -51,6 +52,10 @@ resource "google_storage_bucket" "gdrive_backup" {
   project  = google_project.gdrive_backup.project_id
   name     = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
   location = "${var.cloud_storage_location}"
+}
+
+output "storage_bucket_name" {
+  value = google_storage_bucket.gdrive_backup.name
 }
 
 resource "google_storage_bucket_object" "rclone_conf" {
@@ -65,12 +70,12 @@ output "rclone_conf_gs_url" {
   value = "gs://${google_storage_bucket_object.rclone_conf.bucket}/${google_storage_bucket_object.rclone_conf.output_name}"
 }
 
-resource "google_storage_bucket_object" "service_account_key" {
+resource "google_storage_bucket_object" "gdrive_service_account_key" {
   bucket  = google_storage_bucket.gdrive_backup.name
-  name    = "settings/service_account_key.json"
-  content = base64decode(google_service_account_key.gdrive_backup.private_key)
+  name    = "settings/gdrive_service_account_key.json"
+  content = base64decode(google_service_account_key.gdrive.private_key)
 }
 
-output "service_account_key_gs_url" {
-  value = "gs://${google_storage_bucket_object.service_account_key.bucket}/${google_storage_bucket_object.service_account_key.output_name}"
+output "gdrive_service_account_key_gs_url" {
+  value = "gs://${google_storage_bucket_object.gdrive_service_account_key.bucket}/${google_storage_bucket_object.gdrive_service_account_key.output_name}"
 }
