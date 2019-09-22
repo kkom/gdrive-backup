@@ -18,11 +18,25 @@ resource "google_project" "gdrive_backup" {
   billing_account = var.billing_account_id
 }
 
+output "project_id" {
+  value = google_project.gdrive_backup.project_id
+}
+
 resource "google_project_services" "project" {
   project = google_project.gdrive_backup.project_id
   services = [
     "oslogin.googleapis.com",
   ]
+}
+
+resource "google_service_account" "gdrive_backup" {
+  project      = google_project.gdrive_backup.project_id
+  account_id   = "gdrive-backup"
+  display_name = "Google Drive backup"
+}
+
+output "service_account_unique_id" {
+  value = google_service_account.gdrive_backup.unique_id
 }
 
 resource "random_id" "storage_bucket_suffix" {

@@ -3,6 +3,6 @@
     "backend_bucket": "my_terraform_backends_bucket",
     "backend_prefix": "my_terraform_backend_prefix",
     "cloud_storage_location": "saturn-west3",
-    "gsuite_account_name": "myself@example.com",
+    "gsuite_account_email": "myself@example.com",
     "org_id": 1234567890
 }
