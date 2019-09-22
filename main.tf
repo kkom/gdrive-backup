@@ -34,3 +34,15 @@ resource "google_storage_bucket" "gdrive_backup" {
   name     = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
   location = "${var.cloud_storage_location}"
 }
+
+resource "google_storage_bucket_object" "rclone_conf" {
+  bucket = google_storage_bucket.gdrive_backup.name
+  name   = "settings/rclone.conf"
+  content = templatefile("docker_image/rclone.conf.tpl", {
+    cloud_storage_location = var.cloud_storage_location
+  })
+}
+
+output "rclone_conf_gs_url" {
+  value = "gs://${google_storage_bucket_object.rclone_conf.bucket}/${google_storage_bucket_object.rclone_conf.output_name}"
+}

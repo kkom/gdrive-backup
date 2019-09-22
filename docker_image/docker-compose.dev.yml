@@ -1,0 +1,6 @@
+version: "3.7"
+services:
+  gdrive-backup:
+    build: .
+    volumes:
+      - ~/.config/gcloud:/root/.config/gcloud:ro
