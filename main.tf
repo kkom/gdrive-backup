@@ -35,6 +35,10 @@ resource "google_service_account" "gdrive_backup" {
   display_name = "Google Drive backup"
 }
 
+resource "google_service_account_key" "gdrive_backup" {
+  service_account_id = google_service_account.gdrive_backup.name
+}
+
 output "service_account_unique_id" {
   value = google_service_account.gdrive_backup.unique_id
 }
@@ -59,4 +63,14 @@ resource "google_storage_bucket_object" "rclone_conf" {
 
 output "rclone_conf_gs_url" {
   value = "gs://${google_storage_bucket_object.rclone_conf.bucket}/${google_storage_bucket_object.rclone_conf.output_name}"
+}
+
+resource "google_storage_bucket_object" "service_account_key" {
+  bucket  = google_storage_bucket.gdrive_backup.name
+  name    = "settings/service_account_key.json"
+  content = base64decode(google_service_account_key.gdrive_backup.private_key)
+}
+
+output "service_account_key_gs_url" {
+  value = "gs://${google_storage_bucket_object.service_account_key.bucket}/${google_storage_bucket_object.service_account_key.output_name}"
 }
