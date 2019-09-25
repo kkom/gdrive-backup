@@ -24,6 +24,7 @@ output "project_id" {
 
 resource "google_project_services" "project" {
   project = google_project.gdrive_backup.project_id
+  # TODO: figure out if we can only specify the directly needed services (i.e. not their dependencies)
   services = [
     "containerregistry.googleapis.com",
     "drive.googleapis.com",
@@ -94,6 +95,7 @@ output "gdrive_backup_gcr_location" {
 }
 
 resource "null_resource" "gdrive_backup_gcr_push" {
+  # TODO: figure out how to make Terraform understand when the Docker image has changed
   provisioner "local-exec" {
     command = "docker build -t ${data.google_container_registry_image.gdrive_backup.image_url} -f docker_image/Dockerfile docker_image && docker push ${data.google_container_registry_image.gdrive_backup.image_url}"
   }
