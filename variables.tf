@@ -18,6 +18,10 @@ variable "cloud_storage_location" {
   description = "Location for the Google Cloud Storage bucket"
 }
 
+variable "container_registry_region" {
+  description = "Google Container Registry region, which specifies the region of the registry's storage"
+}
+
 variable "org_id" {
   description = "Google Cloud Platform organisation ID."
 }

@@ -25,8 +25,11 @@ output "project_id" {
 resource "google_project_services" "project" {
   project = google_project.gdrive_backup.project_id
   services = [
+    "containerregistry.googleapis.com",
     "drive.googleapis.com",
     "oslogin.googleapis.com",
+    "pubsub.googleapis.com",
+    "storage-api.googleapis.com",
   ]
 }
 
@@ -78,4 +81,20 @@ resource "google_storage_bucket_object" "gdrive_service_account_key" {
 
 output "gdrive_service_account_key_gs_url" {
   value = "gs://${google_storage_bucket_object.gdrive_service_account_key.bucket}/${google_storage_bucket_object.gdrive_service_account_key.output_name}"
+}
+
+data "google_container_registry_image" "gdrive_backup" {
+  project = google_project.gdrive_backup.project_id
+  region  = var.container_registry_region
+  name    = "gdrive-backup"
+}
+
+output "gdrive_backup_gcr_location" {
+  value = "${data.google_container_registry_image.gdrive_backup.image_url}"
+}
+
+resource "null_resource" "gdrive_backup_gcr_push" {
+  provisioner "local-exec" {
+    command = "docker build -t ${data.google_container_registry_image.gdrive_backup.image_url} -f docker_image/Dockerfile docker_image && docker push ${data.google_container_registry_image.gdrive_backup.image_url}"
+  }
 }
