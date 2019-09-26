@@ -100,25 +100,28 @@ output "gdrive_service_account_key_gs_url" {
   value = local.gdrive_service_account_key_gs_url
 }
 
-data "google_container_registry_image" "gdrive_backup" {
-  project = google_project.gdrive_backup.project_id
-  region  = var.container_registry_region
-  name    = "gdrive-backup"
-}
-
-output "gdrive_backup_gcr_location" {
-  value = "${data.google_container_registry_image.gdrive_backup.image_url}"
-}
-
+# this is a rather hacky way to tag the Docker image, it may be possible
+# to do it much more elegantly
 data "archive_file" "docker_image_dir" {
   type        = "zip"
   source_dir  = "docker_image/"
   output_path = ".tmp/docker_image_dir.zip"
 }
 
+data "google_container_registry_image" "gdrive_backup" {
+  project = google_project.gdrive_backup.project_id
+  region  = var.container_registry_region
+  name    = "gdrive-backup"
+  tag     = data.archive_file.docker_image_dir.output_sha
+}
+
+output "gdrive_backup_gcr_location" {
+  value = "${data.google_container_registry_image.gdrive_backup.image_url}"
+}
+
 resource "null_resource" "gdrive_backup_gcr_push" {
   triggers = {
-    docker_image_dir_hash = data.archive_file.docker_image_dir.output_sha
+    docker_image_url = substr(data.google_container_registry_image.gdrive_backup.image_url, 0, 7)
   }
 
   provisioner "local-exec" {
