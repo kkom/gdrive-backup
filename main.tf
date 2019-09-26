@@ -32,6 +32,11 @@ resource "google_project_service" "drive" {
   service = "drive.googleapis.com"
 }
 
+resource "google_project_service" "run" {
+  project = google_project.gdrive_backup.project_id
+  service = "run.googleapis.com"
+}
+
 resource "google_project_service" "storage-api" {
   project = google_project.gdrive_backup.project_id
   service = "storage-api.googleapis.com"
@@ -73,8 +78,12 @@ resource "google_storage_bucket_object" "rclone_conf" {
   })
 }
 
+locals {
+  rclone_conf_gs_url = "gs://${google_storage_bucket_object.rclone_conf.bucket}/${google_storage_bucket_object.rclone_conf.output_name}"
+}
+
 output "rclone_conf_gs_url" {
-  value = "gs://${google_storage_bucket_object.rclone_conf.bucket}/${google_storage_bucket_object.rclone_conf.output_name}"
+  value = local.rclone_conf_gs_url
 }
 
 resource "google_storage_bucket_object" "gdrive_service_account_key" {
@@ -83,8 +92,12 @@ resource "google_storage_bucket_object" "gdrive_service_account_key" {
   content = base64decode(google_service_account_key.gdrive.private_key)
 }
 
+locals {
+  gdrive_service_account_key_gs_url = "gs://${google_storage_bucket_object.gdrive_service_account_key.bucket}/${google_storage_bucket_object.gdrive_service_account_key.output_name}"
+}
+
 output "gdrive_service_account_key_gs_url" {
-  value = "gs://${google_storage_bucket_object.gdrive_service_account_key.bucket}/${google_storage_bucket_object.gdrive_service_account_key.output_name}"
+  value = local.gdrive_service_account_key_gs_url
 }
 
 data "google_container_registry_image" "gdrive_backup" {
@@ -101,5 +114,46 @@ resource "null_resource" "gdrive_backup_gcr_push" {
   # TODO: figure out how to make Terraform understand when the Docker image has changed
   provisioner "local-exec" {
     command = "docker build -t ${data.google_container_registry_image.gdrive_backup.image_url} -f docker_image/Dockerfile docker_image && docker push ${data.google_container_registry_image.gdrive_backup.image_url}"
+  }
+}
+
+resource "google_cloud_run_service" "default" {
+  depends_on = [
+    google_project_service.run,
+  ]
+  project  = google_project.gdrive_backup.project_id
+  provider = "google-beta"
+
+  name     = "gdrive-backup"
+  location = var.cloud_run_location
+
+  metadata {
+    namespace = google_project.gdrive_backup.project_id
+  }
+
+  spec {
+    containers {
+      image = data.google_container_registry_image.gdrive_backup.image_url
+
+      env {
+        name  = "GSUITE_ACCOUNT_EMAIL"
+        value = var.gsuite_account_email
+      }
+
+      env {
+        name  = "RCLONE_CONF_GS_URL"
+        value = local.rclone_conf_gs_url
+      }
+
+      env {
+        name  = "GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL"
+        value = local.gdrive_service_account_key_gs_url
+      }
+
+      env {
+        name  = "STORAGE_BUCKET_NAME"
+        value = google_storage_bucket.gdrive_backup.name
+      }
+    }
   }
 }
