@@ -1,3 +1,9 @@
+# Mac OS files
+.DS_Store
+
+# Local temporary artifacts
+.tmp/
+
 # Local .terraform directories
 **/.terraform/*
 
