@@ -61,9 +61,10 @@ resource "random_id" "storage_bucket_suffix" {
 }
 
 resource "google_storage_bucket" "gdrive_backup" {
-  project  = google_project.gdrive_backup.project_id
-  name     = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
-  location = "${var.cloud_storage_location}"
+  project            = google_project.gdrive_backup.project_id
+  name               = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
+  location           = "${var.cloud_storage_location}"
+  bucket_policy_only = true
 }
 
 output "storage_bucket_name" {
