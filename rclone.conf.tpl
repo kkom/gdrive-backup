@@ -2,6 +2,7 @@
 type = google cloud storage
 location = ${cloud_storage_location}
 storage_class = NEARLINE
+bucket-policy-only = true
 
 [gdrive]
 type = drive
