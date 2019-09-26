@@ -150,6 +150,12 @@ resource "google_cloud_run_service" "default" {
     containers {
       image = data.google_container_registry_image.gdrive_backup.image_url
 
+      resources {
+        limits = {
+          "memory" = "1Gi"
+        }
+      }
+
       env {
         name  = "GSUITE_ACCOUNT_EMAIL"
         value = var.gsuite_account_email
