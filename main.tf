@@ -73,7 +73,7 @@ output "storage_bucket_name" {
 resource "google_storage_bucket_object" "rclone_conf" {
   bucket = google_storage_bucket.gdrive_backup.name
   name   = "settings/rclone.conf"
-  content = templatefile("docker_image/rclone.conf.tpl", {
+  content = templatefile("rclone.conf.tpl", {
     cloud_storage_location = var.cloud_storage_location
   })
 }
@@ -110,8 +110,17 @@ output "gdrive_backup_gcr_location" {
   value = "${data.google_container_registry_image.gdrive_backup.image_url}"
 }
 
+data "archive_file" "docker_image_dir" {
+  type        = "zip"
+  source_dir  = "docker_image/"
+  output_path = ".tmp/docker_image_dir.zip"
+}
+
 resource "null_resource" "gdrive_backup_gcr_push" {
-  # TODO: figure out how to make Terraform understand when the Docker image has changed
+  triggers = {
+    docker_image_dir_hash = data.archive_file.docker_image_dir.output_sha
+  }
+
   provisioner "local-exec" {
     command = "docker build -t ${data.google_container_registry_image.gdrive_backup.image_url} -f docker_image/Dockerfile docker_image && docker push ${data.google_container_registry_image.gdrive_backup.image_url}"
   }
@@ -120,6 +129,7 @@ resource "null_resource" "gdrive_backup_gcr_push" {
 resource "google_cloud_run_service" "default" {
   depends_on = [
     google_project_service.run,
+    null_resource.gdrive_backup_gcr_push,
   ]
   project  = google_project.gdrive_backup.project_id
   provider = "google-beta"
