@@ -10,4 +10,4 @@ rclone copy \
     --config /var/rclone/rclone.conf \
     --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
     gdrive: \
-    gcs:$STORAGE_BUCKET_NAME/backup_$(date +%Y%m%d)_$(date +%H%M)
+    gcs:$STORAGE_BUCKET_NAME/backup_$(date --utc +%Y%m%d_%H%M)
