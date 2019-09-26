@@ -22,16 +22,19 @@ output "project_id" {
   value = google_project.gdrive_backup.project_id
 }
 
-resource "google_project_services" "project" {
+resource "google_project_service" "containerregistry" {
   project = google_project.gdrive_backup.project_id
-  # TODO: figure out if we can only specify the directly needed services (i.e. not their dependencies)
-  services = [
-    "containerregistry.googleapis.com",
-    "drive.googleapis.com",
-    "oslogin.googleapis.com",
-    "pubsub.googleapis.com",
-    "storage-api.googleapis.com",
-  ]
+  service = "containerregistry.googleapis.com"
+}
+
+resource "google_project_service" "drive" {
+  project = google_project.gdrive_backup.project_id
+  service = "drive.googleapis.com"
+}
+
+resource "google_project_service" "storage-api" {
+  project = google_project.gdrive_backup.project_id
+  service = "storage-api.googleapis.com"
 }
 
 resource "google_service_account" "gdrive" {
