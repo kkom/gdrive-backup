@@ -145,6 +145,8 @@ resource "google_cloud_run_service" "default" {
   }
 
   spec {
+    container_concurrency = 1
+
     containers {
       image = data.google_container_registry_image.gdrive_backup.image_url
 
