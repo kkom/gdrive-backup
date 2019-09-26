@@ -112,7 +112,7 @@ data "google_container_registry_image" "gdrive_backup" {
   project = google_project.gdrive_backup.project_id
   region  = var.container_registry_region
   name    = "gdrive-backup"
-  tag     = data.archive_file.docker_image_dir.output_sha
+  tag     = substr(data.archive_file.docker_image_dir.output_sha, 0, 7)
 }
 
 output "gdrive_backup_gcr_location" {
@@ -121,7 +121,7 @@ output "gdrive_backup_gcr_location" {
 
 resource "null_resource" "gdrive_backup_gcr_push" {
   triggers = {
-    docker_image_url = substr(data.google_container_registry_image.gdrive_backup.image_url, 0, 7)
+    docker_image_url = data.google_container_registry_image.gdrive_backup.image_url
   }
 
   provisioner "local-exec" {
