@@ -9,6 +9,11 @@ gsutil cp $GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL /var/rclone/gdrive_service_account_
 GDRIVE_BACKUP_CMD="rclone copy \
     --config /var/rclone/rclone.conf \
     --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
+    --checkers=40 \
+    --transfers=40 \
+    --tpslimit=10 \
+    --fast-list \
+    --gcs-bucket-policy-only \
     gdrive: \
     gcs:$STORAGE_BUCKET_NAME/backup_\$(date --utc +%Y%m%d_%H%M)"
 
