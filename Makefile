@@ -14,6 +14,7 @@ docker-test:
 	docker build -t $(shell terraform output gdrive_backup_gcr_location) -f docker_image/Dockerfile docker_image
 	docker run \
 		-it \
+		-p 8080:80 \
 		-v ~/.config/gcloud:/root/.config/gcloud:ro \
 		-e GSUITE_ACCOUNT_EMAIL=$(gsuite_account_email) \
 		-e RCLONE_CONF_GS_URL=$(shell terraform output rclone_conf_gs_url) \
