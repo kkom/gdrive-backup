@@ -5,9 +5,12 @@ set -euo pipefail
 gsutil cp $RCLONE_CONF_GS_URL /var/rclone/rclone.conf
 gsutil cp $GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL /var/rclone/gdrive_service_account_key.json
 
-# Perform the backup
-rclone copy \
+# Prepare the backup command (note that we *don't* want to evaluate the date command yet)
+GDRIVE_BACKUP_CMD="rclone copy \
     --config /var/rclone/rclone.conf \
     --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
     gdrive: \
-    gcs:$STORAGE_BUCKET_NAME/backup_$(date --utc +%Y%m%d_%H%M)
+    gcs:$STORAGE_BUCKET_NAME/backup_\$(date --utc +%Y%m%d_%H%M)"
+
+# Perform the backup on HTTP trigger
+shell2http -port 80 / "$GDRIVE_BACKUP_CMD"
