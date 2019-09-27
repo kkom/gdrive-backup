@@ -153,7 +153,7 @@ resource "google_cloud_run_service" "default" {
 
       resources {
         limits = {
-          "memory" = "1Gi"
+          "memory" = "2Gi"
         }
       }
 
