@@ -7,12 +7,15 @@ gsutil cp $GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL /var/rclone/gdrive_service_account_
 
 # Prepare the backup command (note that we *don't* want to evaluate the date command yet)
 GDRIVE_BACKUP_CMD="rclone copy \
-    --config /var/rclone/rclone.conf \
-    --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
+    --stats=60s \
+    --stats-one-line \
+    --stats-log-level=NOTICE \
     --checkers=40 \
     --transfers=40 \
-    --tpslimit=10 \
+    --tpslimit=5 \
     --fast-list \
+    --config /var/rclone/rclone.conf \
+    --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
     --gcs-bucket-policy-only \
     gdrive: \
     gcs:$STORAGE_BUCKET_NAME/backup_\$(date --utc +%Y%m%d_%H%M)"
