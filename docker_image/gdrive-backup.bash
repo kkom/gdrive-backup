@@ -21,4 +21,4 @@ GDRIVE_BACKUP_CMD="rclone copy \
     gcs:$STORAGE_BUCKET_NAME/backup_\$(date --utc +%Y%m%d_%H%M)"
 
 # Perform the backup on HTTP trigger
-shell2http -port $PORT / "$GDRIVE_BACKUP_CMD"
+shell2http -port $PORT /gdrive-backup "$GDRIVE_BACKUP_CMD"
