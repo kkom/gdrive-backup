@@ -219,7 +219,7 @@ resource "google_cloud_scheduler_job" "default" {
 
   name        = "gdrive-backup"
   description = "Triggers a Cloud Run-based Google Drive backup"
-  schedule    = "0 30 * * 0"
+  schedule    = "30 0 * * 0"
   time_zone   = "Europe/London"
 
   http_target {
