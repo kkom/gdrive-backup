@@ -10,10 +10,7 @@ GDRIVE_BACKUP_CMD="rclone copy \
     --stats=60s \
     --stats-one-line \
     --stats-log-level=NOTICE \
-    --checkers=40 \
-    --transfers=40 \
-    --tpslimit=5 \
-    --fast-list \
+    --tpslimit=10 \
     --config /var/rclone/rclone.conf \
     --drive-impersonate $GSUITE_ACCOUNT_EMAIL \
     --gcs-bucket-policy-only \
