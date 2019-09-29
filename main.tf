@@ -27,6 +27,11 @@ resource "google_project_service" "containerregistry" {
   service = "containerregistry.googleapis.com"
 }
 
+resource "google_project_service" "cloudscheduler" {
+  project = google_project.gdrive_backup.project_id
+  service = "cloudscheduler.googleapis.com"
+}
+
 resource "google_project_service" "drive" {
   project = google_project.gdrive_backup.project_id
   service = "drive.googleapis.com"
@@ -130,6 +135,12 @@ resource "null_resource" "gdrive_backup_gcr_push" {
   }
 }
 
+resource "google_service_account" "cloud_run_invoker" {
+  project      = google_project.gdrive_backup.project_id
+  account_id   = "cloud-run-invoker"
+  display_name = "Service account allowed to invoke the Cloud Run endpoint"
+}
+
 resource "google_cloud_run_service" "default" {
   depends_on = [
     google_project_service.run,
@@ -176,6 +187,47 @@ resource "google_cloud_run_service" "default" {
         name  = "STORAGE_BUCKET_NAME"
         value = google_storage_bucket.gdrive_backup.name
       }
+    }
+  }
+}
+
+# TODO: Add google_cloud_run_iam_policy/binding/member (as soon as it exists in TF)
+# to grant the `google_service_account.cloud_run_invoker` account the `roles/run.invoker`
+# role on `google_cloud_run_service.default` resource
+
+resource "google_app_engine_application" "default" {
+  project = google_project.gdrive_backup.project_id
+  # App Engine uses custom names for two GCP regions...
+  location_id = replace(
+    replace(
+      var.cloud_scheduler_region,
+      "us-central1",
+      "us-central",
+    ),
+    "europe-west1",
+    "europe-west",
+  )
+}
+
+resource "google_cloud_scheduler_job" "default" {
+  depends_on = [
+    google_app_engine_application.default,
+  ]
+
+  project = google_project.gdrive_backup.project_id
+  region  = var.cloud_scheduler_region
+
+  name        = "gdrive-backup"
+  description = "Triggers a Cloud Run-based Google Drive backup"
+  schedule    = "0 30 * * 0"
+  time_zone   = "Europe/London"
+
+  http_target {
+    http_method = "GET"
+    uri         = "${google_cloud_run_service.default.status[0].url}/gdrive-backup"
+
+    oidc_token {
+      service_account_email = google_service_account.cloud_run_invoker.email
     }
   }
 }
