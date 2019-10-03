@@ -68,7 +68,7 @@ resource "random_id" "storage_bucket_suffix" {
 resource "google_storage_bucket" "gdrive_backup" {
   project            = google_project.gdrive_backup.project_id
   name               = "gdrive-backup-${random_id.storage_bucket_suffix.hex}"
-  location           = "${var.cloud_storage_location}"
+  location           = var.cloud_storage_location
   bucket_policy_only = true
 }
 
@@ -122,7 +122,7 @@ data "google_container_registry_image" "gdrive_backup" {
 }
 
 output "gdrive_backup_gcr_location" {
-  value = "${data.google_container_registry_image.gdrive_backup.image_url}"
+  value = data.google_container_registry_image.gdrive_backup.image_url
 }
 
 resource "null_resource" "gdrive_backup_gcr_push" {
