@@ -14,8 +14,8 @@ variable "billing_account_id" {
   description = "Google Cloud Platform billing account ID."
 }
 
-variable "cloud_run_location" {
-  description = "Region for the Google Cloud Run service"
+variable "cloud_function_region" {
+  description = "Region for the Google Cloud Function invoking the backup"
 }
 
 variable "cloud_scheduler_region" {

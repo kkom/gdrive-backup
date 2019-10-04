@@ -2,7 +2,7 @@
     "billing_account_id": "123456-12345A-A12345",
     "backend_bucket": "my_terraform_backends_bucket",
     "backend_prefix": "my_terraform_backend_prefix",
-    "cloud_run_location": "saturn-west3",
+    "cloud_function_region": "saturn-west3",
     "cloud_scheduler_region": "saturn-west3",
     "cloud_storage_location": "saturn-west3",
     "container_registry_region": "solarsystem",

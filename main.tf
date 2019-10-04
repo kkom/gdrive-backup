@@ -27,6 +27,11 @@ resource "google_project_service" "containerregistry" {
   service = "containerregistry.googleapis.com"
 }
 
+resource "google_project_service" "cloudfunctions" {
+  project = google_project.gdrive_backup.project_id
+  service = "cloudfunctions.googleapis.com"
+}
+
 resource "google_project_service" "cloudscheduler" {
   project = google_project.gdrive_backup.project_id
   service = "cloudscheduler.googleapis.com"
@@ -35,11 +40,6 @@ resource "google_project_service" "cloudscheduler" {
 resource "google_project_service" "drive" {
   project = google_project.gdrive_backup.project_id
   service = "drive.googleapis.com"
-}
-
-resource "google_project_service" "run" {
-  project = google_project.gdrive_backup.project_id
-  service = "run.googleapis.com"
 }
 
 resource "google_project_service" "storage-api" {
@@ -135,65 +135,47 @@ resource "null_resource" "gdrive_backup_gcr_push" {
   }
 }
 
-resource "google_service_account" "cloud_run_invoker" {
+resource "google_service_account" "cloud_function_invoker" {
   project      = google_project.gdrive_backup.project_id
-  account_id   = "cloud-run-invoker"
-  display_name = "Service account allowed to invoke the Cloud Run endpoint"
+  account_id   = "cloud-function-invoker"
+  display_name = "Service account allowed to invoke the cloud function endpoint"
 }
 
-resource "google_cloud_run_service" "default" {
-  depends_on = [
-    google_project_service.run,
-    null_resource.gdrive_backup_gcr_push,
-  ]
-  project  = google_project.gdrive_backup.project_id
-  provider = "google-beta"
-
-  name     = "gdrive-backup"
-  location = var.cloud_run_location
-
-  metadata {
-    namespace = google_project.gdrive_backup.project_id
-  }
-
-  spec {
-    container_concurrency = 1
-
-    containers {
-      image = data.google_container_registry_image.gdrive_backup.image_url
-
-      resources {
-        limits = {
-          "memory" = "2Gi"
-        }
-      }
-
-      env {
-        name  = "GSUITE_ACCOUNT_EMAIL"
-        value = var.gsuite_account_email
-      }
-
-      env {
-        name  = "RCLONE_CONF_GS_URL"
-        value = local.rclone_conf_gs_url
-      }
-
-      env {
-        name  = "GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL"
-        value = local.gdrive_service_account_key_gs_url
-      }
-
-      env {
-        name  = "STORAGE_BUCKET_NAME"
-        value = google_storage_bucket.gdrive_backup.name
-      }
-    }
-  }
+data "archive_file" "backup_invoker_dir" {
+  type        = "zip"
+  source_dir  = "backup_invoker/"
+  output_path = ".tmp/backup_invoker_dir.zip"
 }
 
-# TODO: Add google_cloud_run_iam_policy/binding/member (as soon as it exists in TF)
-# to grant the `google_service_account.cloud_run_invoker` account the `roles/run.invoker`
-# role on `google_cloud_run_service.default` resource
+resource "google_storage_bucket_object" "backup_invoker_dir" {
+  name   = "cloud_functions/backup_invoker-${substr(data.archive_file.backup_invoker_dir.output_sha, 0, 7)}.zip"
+  bucket = google_storage_bucket.gdrive_backup.name
+  source = data.archive_file.backup_invoker_dir.output_path
+}
+
+resource "google_cloudfunctions_function" "backup_invoker" {
+  project = google_project.gdrive_backup.project_id
+  region  = var.cloud_function_region
+
+  name        = "backup-invoker"
+  description = "Function used to invoke a Google Drive backup procedure"
+  runtime     = "python37"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket_object.backup_invoker_dir.bucket
+  source_archive_object = google_storage_bucket_object.backup_invoker_dir.output_name
+  trigger_http          = true
+  entry_point           = "run"
+}
+
+resource "google_cloudfunctions_function_iam_member" "invoker" {
+  project        = google_cloudfunctions_function.backup_invoker.project
+  region         = google_cloudfunctions_function.backup_invoker.region
+  cloud_function = google_cloudfunctions_function.backup_invoker.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "serviceAccount:${google_service_account.cloud_function_invoker.email}"
+}
 
 resource "google_app_engine_application" "default" {
   project = google_project.gdrive_backup.project_id
@@ -224,10 +206,10 @@ resource "google_cloud_scheduler_job" "default" {
 
   http_target {
     http_method = "GET"
-    uri         = "${google_cloud_run_service.default.status[0].url}/gdrive-backup"
+    uri         = google_cloudfunctions_function.backup_invoker.https_trigger_url
 
     oidc_token {
-      service_account_email = google_service_account.cloud_run_invoker.email
+      service_account_email = google_service_account.cloud_function_invoker.email
     }
   }
 }
