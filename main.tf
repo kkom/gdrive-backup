@@ -108,30 +108,30 @@ output "gdrive_service_account_key_gs_url" {
 
 # this is a rather hacky way to tag the Docker image, it may be possible
 # to do it much more elegantly
-data "archive_file" "docker_image_dir" {
+data "archive_file" "backup_performer_dir" {
   type        = "zip"
-  source_dir  = "docker_image/"
-  output_path = ".tmp/docker_image_dir.zip"
+  source_dir  = "backup_performer/"
+  output_path = ".tmp/backup_performer_dir.zip"
 }
 
-data "google_container_registry_image" "gdrive_backup" {
+data "google_container_registry_image" "backup_performer" {
   project = google_project.gdrive_backup.project_id
   region  = var.container_registry_region
-  name    = "gdrive-backup"
-  tag     = substr(data.archive_file.docker_image_dir.output_sha, 0, 7)
+  name    = "backup-performer"
+  tag     = substr(data.archive_file.backup_performer_dir.output_sha, 0, 7)
 }
 
-output "gdrive_backup_gcr_location" {
-  value = data.google_container_registry_image.gdrive_backup.image_url
+output "backup_performer_gcr_location" {
+  value = data.google_container_registry_image.backup_performer.image_url
 }
 
-resource "null_resource" "gdrive_backup_gcr_push" {
+resource "null_resource" "backup_performer_gcr_push" {
   triggers = {
-    docker_image_url = data.google_container_registry_image.gdrive_backup.image_url
+    backup_performer_url = data.google_container_registry_image.backup_performer.image_url
   }
 
   provisioner "local-exec" {
-    command = "docker build -t ${data.google_container_registry_image.gdrive_backup.image_url} -f docker_image/Dockerfile docker_image && docker push ${data.google_container_registry_image.gdrive_backup.image_url}"
+    command = "docker build -t ${data.google_container_registry_image.backup_performer.image_url} -f backup_performer/Dockerfile backup_performer && docker push ${data.google_container_registry_image.backup_performer.image_url}"
   }
 }
 
