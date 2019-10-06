@@ -11,7 +11,7 @@ terraform-apply:
 	terraform apply
 
 docker-test:
-	docker build -t $(shell terraform output gdrive_backup_gcr_location) -f docker_image/Dockerfile docker_image
+	docker build -t $(shell terraform output backup_performer_gcr_location) -f backup_performer/Dockerfile backup_performer
 	docker run \
 		-it \
 		-p 8080:8080 \
@@ -21,5 +21,5 @@ docker-test:
 		-e RCLONE_CONF_GS_URL=$(shell terraform output rclone_conf_gs_url) \
 		-e GDRIVE_SERVICE_ACCOUNT_KEY_GS_URL=$(shell terraform output gdrive_service_account_key_gs_url) \
 		-e STORAGE_BUCKET_NAME=$(shell terraform output storage_bucket_name) \
-		$(shell terraform output gdrive_backup_gcr_location) \
+		$(shell terraform output backup_performer_gcr_location) \
 		bash
